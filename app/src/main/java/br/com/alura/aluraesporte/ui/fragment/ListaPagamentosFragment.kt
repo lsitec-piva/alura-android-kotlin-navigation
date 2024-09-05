@@ -5,21 +5,21 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.navigation.fragment.findNavController
+import androidx.lifecycle.Observer
 import br.com.alura.aluraesporte.R
+import br.com.alura.aluraesporte.ui.recyclerview.adapter.ListaPagamentosAdapter
 import br.com.alura.aluraesporte.ui.viewmodel.ComponentesVisuais
 import br.com.alura.aluraesporte.ui.viewmodel.EstadoAppViewModel
-import br.com.alura.aluraesporte.ui.viewmodel.LoginViewModel
-import kotlinx.android.synthetic.main.login.*
+import br.com.alura.aluraesporte.ui.viewmodel.PagamentoViewModel
+import kotlinx.android.synthetic.main.lista_pagamentos.*
+import org.koin.android.ext.android.inject
 import org.koin.android.viewmodel.ext.android.sharedViewModel
 import org.koin.android.viewmodel.ext.android.viewModel
 
-class LoginFragment : Fragment() {
+class ListaPagamentosFragment : BaseFragment() {
 
-    private val controlador by lazy {
-        findNavController()
-    }
-    private val viewModel: LoginViewModel by viewModel()
+    private val adapter: ListaPagamentosAdapter by inject()
+    private val viewModel: PagamentoViewModel by viewModel()
     private val estadoAppViewModel: EstadoAppViewModel by sharedViewModel()
 
     override fun onCreateView(
@@ -28,7 +28,7 @@ class LoginFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         return inflater.inflate(
-            R.layout.login,
+            R.layout.lista_pagamentos,
             container,
             false
         )
@@ -36,21 +36,16 @@ class LoginFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        estadoAppViewModel.temComponentes = ComponentesVisuais()
-        login_botao_logar.setOnClickListener {
-            viewModel.loga()
-            vaiParaListaProdutos()
-        }
-        login_botao_cadastrar_usuario.setOnClickListener {
-            val direcao = LoginFragmentDirections
-                .acaoLoginParaCadastroUsuario()
-            controlador.navigate(direcao)
-        }
-    }
-
-    private fun vaiParaListaProdutos() {
-        val direcao = LoginFragmentDirections.acaoLoginParaListaProdutos()
-        controlador.navigate(direcao)
+        lista_pagamentos_recyclerview.adapter = adapter
+        viewModel.todos().observe(this, Observer {
+            it?.let { pagamentosEncontrados ->
+                adapter.add(pagamentosEncontrados)
+            }
+        })
+        estadoAppViewModel.temComponentes = ComponentesVisuais(
+            appBar = true,
+            bottomNavigation = true
+        )
     }
 
 }
